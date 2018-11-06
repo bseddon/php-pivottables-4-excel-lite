@@ -11,6 +11,7 @@ The pivot table features not supported include:
 - Styling
 - Hierarchies
 - Formulas
+
 However, there is no reason why support for these features cannot be added and the project shows how additional features can be implemented.
 
 # Installing
