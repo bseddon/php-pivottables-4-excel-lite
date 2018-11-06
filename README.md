@@ -12,3 +12,27 @@ The pivot table features not supported include:
 - Hierarchies
 - Formulas
 However, there is no reason why support for these features cannot be added and the project shows how additional features can be implemented.
+
+# Installing
+Use composer with the command:
+composer install lyquidity/php-pivottables-4-excel-lite:dev-master --prefer-dist
+
+# Getting started
+
+The ./examples/example.php file includes illustrations of using the classes.
+
+Assuming you have installed the library using composer then this PHP application will run the test:
+
+```php
+<?php
+require_once __DIR__ . '/vendor/autoload.php';
+$spreadsheet = new Spreadsheet();
+$data = array(..data..);
+$range = $spreadsheet->addData( $data, 'Workbook Title' );
+$spreadsheet->addNewPivotTable( 
+   $data, $range, 2, 2, 
+   new Groups( array( 'Row1', 'RowN' ) ), 
+   new Groups( array( 'Col1', 'ColN' ) ), 
+   new Groups( array( 'Value1', 'ValueN' ) )
+);
+```
