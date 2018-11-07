@@ -418,7 +418,7 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 	/**
 	 * Apply the data in the array to $sheetIndex.  If the sheet is missing, one will be added.
 	 * A check will be made for other pivot table and an error will be raised if there is an overlap.
-	 * @param array $data The data to pivot
+	 * @param array $data The data to pivot.  The first row is a list of headers.
 	 * @param string $dataRange A string defining a range containing the data from which to create a pivot table
 	 * @param int $sheetIndex Can be in number of the sheet or a name
 	 * @param number $rowIndex (optional: default=2) The top of the array to populate
@@ -429,7 +429,7 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 	 * @param string $name The name to use for the pivot table
 	 * @return bool True if the pivot table has been created successfully
 	 */
-	public function addnewPivotTable( $data, $dataRange, $sheetIndex, $rowIndex = 2, $colIndex = 2, $rowGroups = null, $columnGroups = null, $valueGroups = null, $name = "PivotTable1", $dataCaption = 'Data' )
+	public function addNewPivotTable( $data, $dataRange, $sheetIndex, $rowIndex = 2, $colIndex = 2, $rowGroups = null, $columnGroups = null, $valueGroups = null, $name = "PivotTable1", $dataCaption = 'Data' )
 	{
 		// Check for existing pivot tables
 
@@ -437,9 +437,9 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 
 		$sheet = $this->getSheetFromIndex( $sheetIndex );
 		$date = \PhpOffice\PhpSpreadsheet\Shared\Date::PHPToExcel( time() );
-		// $definitionUniqueId = uniqid();
-		$this->definitionId++;
-		$definitionUniqueId = $this->definitionId;
+		$definitionUniqueId = uniqid();
+		// $this->definitionId++;
+		// $definitionUniqueId = $this->definitionId;
 		$sharedItems = $this->createCacheDefinition( $sheet, $dataRange, $definitionUniqueId, $date );
 
 		// Create a record set
