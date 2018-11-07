@@ -1,0 +1,14 @@
+<users>
+  <user account="Megan" genre="Portraits" images="20"
+     avgrank="4.0" size="72000" />
+  <user account="Hannah" genre="Landscapes" images="31"
+     avgrank="3.5" size="83000" />
+  <user account="Vicky" genre="Floral" images="25"
+     avgrank="4.2" size="42000" />
+  <user account="Ian" genre="Portraits" images="40"
+     avgrank="3.7" size="92000" />
+  <user account="Michael" genre="Landscapes" images="23"
+     avgrank="3.8" size="72000" />
+  <user account="Daniel" genre="Landscapes" images="29"
+     avgrank="4.4" size="85000" />
+</users>
