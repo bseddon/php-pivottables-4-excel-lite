@@ -5,9 +5,25 @@ use \lyquidity\xbrl_validate\PhpOffice\PhpSpreadsheet\Group;
 use \lyquidity\xbrl_validate\PhpOffice\PhpSpreadsheet\Spreadsheet;
 
 require_once __DIR__ . '/data.php';
-require_once __DIR__ . '/../vendor/autoload.php';
+if ( file_exists( __DIR__ . '/../../../autoload.php' ) )
+{
+	require_once __DIR__ . '/../../../autoload.php';
+}
+// Required for the original implementation
+elseif ( file_exists( __DIR__ . '/../vendor/autoload.php' ) )
+{
+	require_once __DIR__ . '/../vendor/autoload.php';
+}
+else
+{
+	throw new Exception("Unable to autoload classes");
+}
 
-if ( ! class_exists( "\lyquidity\xbrl_validate\PhpOffice\PhpSpreadsheet\Spreadsheet", false ) )
+// Only load the bootstrap files directly if they have not been loaded by Composer already
+// Required for the original implementation
+$files = get_included_files();
+$bootstrap = realpath( __DIR__ . '/../phpspreadsheet/Spreadsheet.php' );
+if ( ! in_array( $bootstrap, $files ) )
 {
 	require_once __DIR__ . '/../phpspreadsheet/Spreadsheet.php';
 }
