@@ -98,7 +98,7 @@ foreach ( $networks as $index => $network )
 	$spreadsheet->addNewPivotTable( $data, $range, ...$network['args'] );
 }
 
-$writer = PhpOffice\PhpSpreadsheet\IOFactory::createWriter( $spreadsheet, $inputFileType );
+$writer = PhpOffice\PhpSpreadsheet\IOFactory::createWriter( $spreadsheet, 'Xlsx' );
 $writer->save($outputFileName);
 
 $spreadsheet->disconnectWorksheets();
