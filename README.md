@@ -1,4 +1,4 @@
-# PHP Pivot Tables for Excel Lite
+# PHP Pivot Tables for Excel - Lite
 
 PHPOffice/PhpSpreadsheet is a great project to read and write Excel workbook but it does not support some Excel features such as 
 Tables and Pivot Tables.  This project extends PhpSpreadsheet by adding support for pivot tables but only in a limited way.
