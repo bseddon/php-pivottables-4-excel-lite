@@ -22,7 +22,7 @@ However, there is no reason why support for these features cannot be added and t
 Use composer with the command:
 
 ```
-composer install lyquidity/php-pivottables-4-excel-lite:dev-master --prefer-dist
+composer require lyquidity/php-pivottables-4-excel-lite:dev-master --prefer-dist
 ```
 
 # Getting started
