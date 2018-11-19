@@ -383,6 +383,15 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 
 	/**
 	 * Apply the data in the array to $sheetIndex.  If the sheet is missing, one will be added.
+	 * This function expects the $data array has headers as the key for every value:
+	 * 	[0]
+	 * 		[A] => 'Val 1',
+	 * 		[B] => 'Val 2',
+	 * 		[X] => 'Val n'
+	 *  [1]
+	 * 		[A] => 'Val 11',
+	 * 		[B] => 'Val 12',
+	 * 		[X] => 'Val 1n'
 	 * @param array $data An associative array of data to add to the sheet
 	 * @param int $sheetIndex Can be in number of the sheet or a name
 	 * @param number $rowIndex (optional: default=2) The top of the array to populate
@@ -392,14 +401,41 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 	 */
 	public function addData( $data, $sheetIndex, $rowIndex = 2, $colIndex = 2, $hideRows = true )
 	{
-		$sheet = $this->getSheetFromIndex( $sheetIndex );
-
 		// $data is an array in which row zero is a list of headers
 		$headers = array_keys( $data[0] );
 		$values = array_merge( array( $headers ), array_values( $data ) );
 
+		return $this->addValues( $values, $sheetIndex, $rowIndex = 2, $colIndex = 2, $hideRows = true );
+	}
+
+	/**
+	 * Apply the values in the array to $sheetIndex.  If the sheet is missing, one will be added.
+	 * This function expects $values to have the first row as headers and subsequent rows as values:
+	 * [0]
+	 * 		[A]
+	 * 		[B]
+	 * 		[X]
+	 * [1]
+	 * 		[Val 1]
+	 * 		[Val 2]
+	 * 		[Val n]
+	 * [2]
+	 * 		[Val 11]
+	 * 		[Val 12]
+	 * 		[Val 1n]
+	 * @param array $data An associative array of data to add to the sheet
+	 * @param int $sheetIndex Can be in number of the sheet or a name
+	 * @param number $rowIndex (optional: default=2) The top of the array to populate
+	 * @param number $colIndex (optional: default=2) The left of the array to populate
+	 * @param bool $hideRows (optional: default=true) When true the rows used by the data will be hidden
+	 * @return string The range containing the added data
+	 */
+	public function addValues( $values, $sheetIndex, $rowIndex = 2, $colIndex = 2, $hideRows = true )
+	{
+		$sheet = $this->getSheetFromIndex( $sheetIndex );
+
 		$sheet->fromArray( $values, null, \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex( $colIndex ) . $rowIndex );
-		$sheet->getStyleByColumnAndRow( $colIndex, $rowIndex, $colIndex + count( $headers ) - 1, $rowIndex )->getFont()->setBold( true );
+		$sheet->getStyleByColumnAndRow( $colIndex, $rowIndex, $colIndex + count( $values[0] ) - 1, $rowIndex )->getFont()->setBold( true );
 		$sheet->setSelectedCell("A1");
 
 		if ( $hideRows )
@@ -409,7 +445,7 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 		}
 
 		return	\PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex( $colIndex ) . $rowIndex . ":" .
-				\PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex( $colIndex + count( $headers ) - 1 ) .
+				\PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex( $colIndex + count( $values[0] ) - 1 ) .
 				( $colIndex + count( $values ) - 1 );
 	}
 
