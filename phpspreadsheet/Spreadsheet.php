@@ -503,7 +503,7 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 	 * @param int|string $sheetIndex
 	 * @return NULL|\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet
 	 */
-	private function getSheetFromIndex( $sheetIndex )
+	public function getSheetFromIndex( $sheetIndex )
 	{
 		$sheet = null;
 		if ( is_numeric( $sheetIndex ) )
