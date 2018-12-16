@@ -70,6 +70,11 @@ class Groups implements \IteratorAggregate
 		{
 			$groups = array_reduce( $groups, function( $carry, $group )
 			{
+				if ( is_numeric( $group ) )
+				{
+					throw new \Exception("Group names MUST be strings");
+				}
+
 				if ( is_string( $group ) )
 				{
 					$group = new Group( $group );
@@ -446,7 +451,7 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 
 		return	\PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex( $colIndex ) . $rowIndex . ":" .
 				\PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex( $colIndex + count( $values[0] ) - 1 ) .
-				( $colIndex + count( $values ) - 1 );
+				( $rowIndex + count( $values ) - 1 );
 	}
 
 	private $definitionId = 0;
