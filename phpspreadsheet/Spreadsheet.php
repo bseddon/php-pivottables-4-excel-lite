@@ -496,7 +496,7 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 		// The table is place '7' rows after the end of the data to allow for the paging fields.
 		if ( ! $this->createPivotTable(
 			$sheet, $dataRange, $definitionUniqueId,
-			$cacheId, $sharedItems, $sheetIndex, $colIndex, $rowIndex,
+			$cacheId, $sharedItems, $colIndex, $rowIndex,
 			$rowGroups, $columnGroups, $valueGroups, $name, $dataCaption )
 		) return false;
 
@@ -885,7 +885,6 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 	 * @param string $definitionUniqueId	The unique id appended to create a unique file name of and reference id for the definition cache
 	 * @param int $cacheId					Id held in workbooks
 	 * @param array $sharedItems			An array of the fields and unique fields values
-	 * @param string|int					The index of the sheet in which the pivot table will appear.
 	 * 										This can be an exising or new sheet.
 	 * @param int $colIndex					The left of the data area of the pivot table.
 	 * @param int $rowIndex					The top of the data area of the pivot table.
@@ -897,13 +896,13 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 	 * @return bool
 	 * @throws Exception					If there are no row groups or there are conflicts between the row, columns and value groups
 	 */
-	private function createPivotTable( $sheet, $dataRange, $definitionUniqueId, $cacheId, $sharedItems, $sheetIndex, $colIndex, $rowIndex, $rowGroups = null, $columnGroups = null, $valueGroups = null, $name = "PivotTable1", $dataCaption = 'Data' )
+	private function createPivotTable( $sheet, $dataRange, $definitionUniqueId, $cacheId, $sharedItems, $colIndex, $rowIndex, $rowGroups = null, $columnGroups = null, $valueGroups = null, $name = "PivotTable1", $dataCaption = 'Data' )
 	{
 		// Two pivot table examples are shown below after the code.
 		// For more information about the pivotTable element see section 18.10 of
 		// Ecma Office Open XML Part 1 - Fundamentals And Markup Language Reference.pdf
 
-		$sheet = $this->getSheetFromIndex( $sheetIndex );
+		// $sheet = $this->getSheetFromIndex( $sheetIndex );
 
 		$boundary = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::rangeBoundaries( $dataRange );
 		$leftCol = $boundary[0][0];
@@ -1280,7 +1279,7 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 		// echo $xml;
 		unset( $zip );
 
-		$pivotTable = $this->addPivotTable( "rId$definitionUniqueId", "xl/pivotTables/pivotTable$definitionUniqueId.xml", $xml, $cacheId, "xl/worksheets/sheet" . ( $this->getIndex( $sheet ) + 1 ) . ".xml" );
+		$pivotTable = $this->addPivotTable( "rId$definitionUniqueId", "xl/pivotTables/pivotTable$definitionUniqueId.xml", $xml, $cacheId, "xl/worksheets/sheet" . ( $this->getIndex( $sheet ) ) . ".xml" );
 
 		$rId = $this->pivotCacheDefinitionCollection->getPivotCacheIndex( $cacheId );
 		$path = $this->pivotCacheDefinitionCollection->getPivotCacheDefinitionPath( $rId );
