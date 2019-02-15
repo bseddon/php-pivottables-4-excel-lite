@@ -44,7 +44,8 @@ class PivotTableCollection implements \IteratorAggregate
 		return (function ()
 		{
 			reset($this->pivotTables);
-			while(list($key, $val) = each($this->pivotTables))
+			// while(list($key, $val) = each($this->pivotTables))
+			foreach ( $this->pivotTables as $key => $val )
 			{
 				yield $key => $val;
 			}

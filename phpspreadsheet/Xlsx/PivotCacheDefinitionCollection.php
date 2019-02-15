@@ -35,7 +35,8 @@ class PivotCacheDefinitionCollection implements \IteratorAggregate
 		return (function ()
 		{
 			reset($this->pivotCacheDefinitions);
-			while(list($key, $val) = each($this->pivotCacheDefinitions))
+			// while(list($key, $val) = each($this->pivotCacheDefinitions))
+			foreach ( $this->pivotCacheDefinitions as $key => $val )
 			{
 				yield $key => $val;
 			}

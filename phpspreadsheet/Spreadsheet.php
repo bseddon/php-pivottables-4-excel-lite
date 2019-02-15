@@ -138,7 +138,8 @@ class Groups implements \IteratorAggregate
 		return (function ()
 		{
 			reset($this->groups);
-			while(list($key, $val) = each($this->groups))
+			// while(list($key, $val) = each($this->groups))
+			foreach ( $this->groups as $key => $val )
 			{
 				yield $key => $val;
 			}
@@ -296,7 +297,8 @@ class Group implements \IteratorAggregate
 		return (function ()
 		{
 			reset($this->values);
-			while(list($key, $val) = each($this->values))
+			// while(list($key, $val) = each($this->values))
+			foreach ( $this->values as $key => $val )
 			{
 				yield $key => $val;
 			}

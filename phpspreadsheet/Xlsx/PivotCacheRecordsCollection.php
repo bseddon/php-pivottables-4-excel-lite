@@ -40,7 +40,8 @@ class PivotCacheRecordsCollection implements \IteratorAggregate
 		return (function ()
 		{
 			reset($this->pivotCacheRecords);
-			while(list($key, $val) = each($this->pivotCacheRecords))
+			// while(list($key, $val) = each($this->pivotCacheRecords))
+			foreach ( $this->pivotCacheRecords as $key => $val )
 			{
 				yield $key => $val;
 			}
