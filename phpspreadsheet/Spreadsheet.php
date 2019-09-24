@@ -463,12 +463,12 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 	 * A check will be made for other pivot table and an error will be raised if there is an overlap.
 	 * @param array $data The data to pivot.  The first row is a list of headers.
 	 * @param string $dataRange A string defining a range containing the data from which to create a pivot table
-	 * @param int $sheetIndex Can be in number of the sheet or a name
+	 * @param int $sheetIndex Can be the number of the sheet or its name
 	 * @param number $rowIndex (optional: default=2) The top of the array to populate
 	 * @param number $colIndex (optional: default=2) The left of the array to populate
-	 * @param Groups $rowGroups The names of fields that should be shown as columns
+	 * @param Groups $rowGroups The names of fields that should be shown as rows
 	 * @param Groups $columnGroups The names of fields that should be shown as columns
-	 * @param Groups $valueGroups The names of fields that should be shown as columns
+	 * @param Groups $valueGroups The names of fields that should be shown as values
 	 * @param string $name The name to use for the pivot table
 	 * @return bool True if the pivot table has been created successfully
 	 */
