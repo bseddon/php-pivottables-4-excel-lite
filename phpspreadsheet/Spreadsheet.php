@@ -859,7 +859,7 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 
 				foreach ( $sumColumnIndexes as $columnIndex )
 				{
-					$totals[ $columnIndex ] += $values[ $columnIndex ];
+					$totals[ $columnIndex ] += is_numeric( $values[ $columnIndex ] ) ? $values[ $columnIndex ] : 0;
 				}
 
 				$result->addValue( $groupValues, $totals );
@@ -1281,7 +1281,7 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 		// echo $xml;
 		unset( $zip );
 
-		$pivotTable = $this->addPivotTable( "rId$definitionUniqueId", "xl/pivotTables/pivotTable$definitionUniqueId.xml", $xml, $cacheId, "xl/worksheets/sheet" . ( $this->getIndex( $sheet ) ) . ".xml" );
+		$pivotTable = $this->addPivotTable( "rId$definitionUniqueId", "xl/pivotTables/pivotTable$definitionUniqueId.xml", $xml, $cacheId, "xl/worksheets/sheet" . ( $this->getIndex( $sheet ) + 1 ) . ".xml" );
 
 		$rId = $this->pivotCacheDefinitionCollection->getPivotCacheIndex( $cacheId );
 		$path = $this->pivotCacheDefinitionCollection->getPivotCacheDefinitionPath( $rId );

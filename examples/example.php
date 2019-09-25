@@ -56,7 +56,7 @@ $networks = array(
 	// ascending) are acceptable.
 	array(	'data' => $data,
 			'args' => array(
-				"Worksheet",
+				"Worksheet1",
 				2 + count( $data ) + 1 + 3, 2,
 				new Groups( array( new Group( 'Account', 'manual', array( 'Megan', 'Daniel', 'Hannah' ) ), 'Genre' ) ),
 				new Groups(),
