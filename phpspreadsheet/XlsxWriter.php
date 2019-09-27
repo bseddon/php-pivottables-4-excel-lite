@@ -352,7 +352,6 @@ class Xlsx extends \PhpOffice\PhpSpreadsheet\Writer\Xlsx
             // Add worksheet relationships (drawings, ...)
             for ($i = 0; $i < $this->spreadSheet->getSheetCount(); ++$i) {
                 // Add relationships
-                // BMS TODO
                 $zip->addFormattedXml('xl/worksheets/_rels/sheet' . ($i + 1) . '.xml.rels', $this->getWriterPart('Rels')->writeWorksheetRelationships($this->spreadSheet->getSheet($i), ($i + 1), $this->includeCharts));
 
                 // Add unparsedLoadedData

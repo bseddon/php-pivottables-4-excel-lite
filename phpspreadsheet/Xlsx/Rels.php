@@ -272,7 +272,8 @@ class Rels extends PhpOffice\PhpSpreadsheet\Writer\Xlsx\Rels
 		if ( $spreadsheet->pivotTables->hasPivotTables() ) // Are there any pivot tables?
 		{
 			// If so, is there a pivot table for this sheet?
-			if ( ( $pivotTables = $spreadsheet->pivotTables->ownedBy("xl/worksheets/sheet$pWorksheetId.xml") ) )
+			// if ( ( $pivotTables = $spreadsheet->pivotTables->ownedBy("xl/worksheets/sheet$pWorksheetId.xml") ) )
+			if ( ( $pivotTables = $spreadsheet->pivotTables->ownedBy( $pWorksheet->getCodeName() ) ) )
 			{
 				foreach ( $pivotTables as $path => /** @var PivotTable $pivotTable */ $pivotTable )
 				{

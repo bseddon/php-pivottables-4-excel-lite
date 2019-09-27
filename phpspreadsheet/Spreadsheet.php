@@ -177,19 +177,27 @@ class Group implements \IteratorAggregate
 	private $visibleValues = true;
 
 	/**
-	 * Constructor
-	 * @param string $name		The name of the group
-	 * @param string $sortType	One of 'ascending', descending' or 'manual'
-	 * @param array $value		An explicit list of the values that should be visible (all others will be hidden)
-	 * 							Leave empty to show all values
+	 * Flag to control whether sub-totals are shown on outer members
+	 * @var true
 	 */
-	public function __construct( $name, $sortType = 'ascending', $values = array() )
+	private $showSubtotals = false;
+
+	/**
+	 * Constructor
+	 * @param string $name			The name of the group
+	 * @param string $sortType		One of 'ascending', descending' or 'manual'
+	 * @param array $value			An explicit list of the values that should be visible (all others will be hidden)
+	 * 								Leave empty to show all values
+	 * @param bool $showSubtotals	When true sub-totals are shown
+	 */
+	public function __construct( $name, $sortType = 'ascending', $values = array(), $showSubtotals = true )
 	{
 		if ( ! is_string( $name ) ) throw new \Exception("The group name argument is not a string");
 
 		$this->name = $name;
 		$this->sortType = $sortType;
 		$this->addVisibleValues( $values );
+		$this->showSubtotals = $showSubtotals;
 	}
 
 	/**
@@ -267,6 +275,14 @@ class Group implements \IteratorAggregate
 			throw \Exception( "The sort type MUST be one of 'ascending', 'descending' or 'manual'" );
 
 		$this->sortType = $type;
+	}
+
+	/**
+	 * True if the group should show sub-totals
+	 */
+	public function getShowSubtotals()
+	{
+		return $this->showSubtotals;
 	}
 
 	/**
@@ -461,18 +477,21 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 	/**
 	 * Apply the data in the array to $sheetIndex.  If the sheet is missing, one will be added.
 	 * A check will be made for other pivot table and an error will be raised if there is an overlap.
-	 * @param array $data The data to pivot.  The first row is a list of headers.
+	 * @param array  $data The data to pivot.  The first row is a list of headers.
 	 * @param string $dataRange A string defining a range containing the data from which to create a pivot table
-	 * @param int $sheetIndex Can be the number of the sheet or its name
+	 * @param int	 $sheetIndex Can be the number of the sheet or its name
 	 * @param number $rowIndex (optional: default=2) The top of the array to populate
 	 * @param number $colIndex (optional: default=2) The left of the array to populate
-	 * @param Groups $rowGroups The names of fields that should be shown as rows
-	 * @param Groups $columnGroups The names of fields that should be shown as columns
-	 * @param Groups $valueGroups The names of fields that should be shown as values
-	 * @param string $name The name to use for the pivot table
+	 * @param Groups $rowGroups (optional: null) The names of fields that should be shown as rows
+	 * @param Groups $columnGroups (optional: null) The names of fields that should be shown as columns
+	 * @param Groups $valueGroups (optional: null) The names of fields that should be shown as values
+	 * @param string $name (optional: PivotTable1) The name to use for the pivot table
+	 * @param string $dataCaption (optional: data) The caption to display over the columns when they are displayed
+	 * @param bool	 $showColGrandTotals (optional: true)
+	 * @param bool	 $showRowGrandTotals (optional: true)
 	 * @return bool True if the pivot table has been created successfully
 	 */
-	public function addNewPivotTable( $data, $dataRange, $sheetIndex, $rowIndex = 2, $colIndex = 2, $rowGroups = null, $columnGroups = null, $valueGroups = null, $name = "PivotTable1", $dataCaption = 'Data' )
+	public function addNewPivotTable( $data, $dataRange, $sheetIndex, $rowIndex = 2, $colIndex = 2, $rowGroups = null, $columnGroups = null, $valueGroups = null, $name = "PivotTable1", $dataCaption = 'Data', $showColGrandTotals = true, $showRowGrandTotals = true )
 	{
 		// Check for existing pivot tables
 
@@ -497,9 +516,11 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 		// Create the pivot table.
 		// The table is place '7' rows after the end of the data to allow for the paging fields.
 		if ( ! $this->createPivotTable(
-			$sheet, $dataRange, $definitionUniqueId,
-			$cacheId, $sharedItems, $colIndex, $rowIndex,
-			$rowGroups, $columnGroups, $valueGroups, $name, $dataCaption )
+				$sheet, $dataRange, $definitionUniqueId,
+				$cacheId, $sharedItems, $colIndex, $rowIndex,
+				$rowGroups, $columnGroups, $valueGroups, $name,
+				$dataCaption, $showColGrandTotals, $showRowGrandTotals
+			)
 		) return false;
 
 		return true;
@@ -785,8 +806,8 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 	}
 
 	/**
-	 * Return an array of integer offset that correspond to the group position in $columns
-	 * @param array $columns A list of columns in shared items order
+	 * Return an array of integer offsets that correspond to the group position in $columns
+	 * @param array $columns A list of column headers in shared items order
 	 * @param Groups|null $groups A list of groups by name
 	 * @return int[]
 	 */
@@ -873,6 +894,21 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 	}
 
 	/**
+	 * Get the key value of the last element of an array
+	 * @param mixed $array
+	 * @return NULL
+	 */
+	private function get_last_key( $array )
+	{
+		if ( version_compare( PHP_VERSION, "7.3.0", "ge" ) )
+		{
+			return array_key_last( $array );
+		}
+
+		return array_keys($array)[count($array)-1];
+	}
+
+	/**
 	 * Create the PivotTable xml.  The elements are defined in section 18.10
 	 * Ecma Office Open XML Part 1 - Fundamentals And Markup Language Reference.pdf
 	 * This only creates a basic pivot table based on data in a sheet
@@ -891,14 +927,17 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 	 * @param int $colIndex					The left of the data area of the pivot table.
 	 * @param int $rowIndex					The top of the data area of the pivot table.
 	 * 										It will be an error if there is no space for paging columns.
-	 * @param Groups $columnGroups			A list of the columns to display.  Can be empty.
-	 * @param Groups $rowGroups				A list of the rows to display.  Can be empty.
-	 * @param Groups $valueGroups			A list of the value columns
-	 * @param string $dataCaption			The caption to display over the columns when they are displayed
+	 * @param Groups $columnGroups			(optional: null) A list of the columns to display.  Can be empty.
+	 * @param Groups $rowGroups				(optional: null) A list of the rows to display.  Can be empty.
+	 * @param Groups $valueGroups			(optional: null) A list of the value columns
+	 * @param string $name 					(optional: PivotTable1) The name to use for the pivot table
+	 * @param string $dataCaption 			(optional: data) The caption to display over the columns when they are displayed
+	 * @param bool	 $showColGrandTotals	(optional: true)
+	 * @param bool	 $showRowGrandTotals	(optional: true)
 	 * @return bool
 	 * @throws Exception					If there are no row groups or there are conflicts between the row, columns and value groups
 	 */
-	private function createPivotTable( $sheet, $dataRange, $definitionUniqueId, $cacheId, $sharedItems, $colIndex, $rowIndex, $rowGroups = null, $columnGroups = null, $valueGroups = null, $name = "PivotTable1", $dataCaption = 'Data' )
+	private function createPivotTable( $sheet, $dataRange, $definitionUniqueId, $cacheId, $sharedItems, $colIndex, $rowIndex, $rowGroups = null, $columnGroups = null, $valueGroups = null, $name = "PivotTable1", $dataCaption = 'Data', $showColGrandTotals = true, $showRowGrandTotals = true )
 	{
 		// Two pivot table examples are shown below after the code.
 		// For more information about the pivotTable element see section 18.10 of
@@ -976,6 +1015,8 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 			$objWriter->writeAttribute('compact', "0" );
 			$objWriter->writeAttribute('compactData', "0" );
 			$objWriter->writeAttribute('gridDropZones', "1" );
+			$objWriter->writeAttribute('colGrandTotals', $showColGrandTotals ? "1" : "0" );
+			$objWriter->writeAttribute('rowGrandTotals', $showRowGrandTotals ? "1" : "0" );
 
 			$objWriter->startElement('location');
 				$objWriter->writeAttribute('ref', $pivotTableRange );
@@ -1020,8 +1061,10 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 							$objWriter->writeAttribute('sortType', $columnGroup->getSortType() );
 						}
 
+						$objWriter->writeAttribute('defaultSubtotal', $group->getShowSubtotals() ? "1" : "0" );
+
 						$objWriter->startElement('items');
-							$objWriter->writeAttribute('count', count( $items ) + 1 );
+							$objWriter->writeAttribute('count', count( $items ) + $group->getShowSubtotals() ? 1 : 0 );
 
 							foreach ( $items as $itemIndex => $item )
 							{
@@ -1034,9 +1077,12 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 								$objWriter->endElement();
 							}
 
-							$objWriter->startElement('item');
-								$objWriter->writeAttribute('t', 'default');
-							$objWriter->endElement();
+							if ( $group->getShowSubtotals() )
+							{
+								$objWriter->startElement('item');
+									$objWriter->writeAttribute('t', 'default');
+								$objWriter->endElement();
+							}
 
 						$objWriter->endElement();
 					}
@@ -1062,7 +1108,7 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 			$objWriter->endElement();
 
 			$objWriter->startElement('rowItems');
-				$objWriter->writeAttribute('count', count( $rowPivotGroups->getKeys() ) + 1 );
+				$objWriter->writeAttribute('count', count( $rowPivotGroups->getKeys() ) + ( $showRowGrandTotals ? 1 : 0 ) );
 
 			/**
 			 	The row items element has this kind of structure where each sub element of <i> is a member of respective
@@ -1107,6 +1153,8 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 				$objWriter->endElement();
 			}
 
+			if ( $showRowGrandTotals )
+			{
 				$objWriter->startElement('i');
 					$objWriter->writeAttribute('t', 'grand' );
 
@@ -1114,6 +1162,7 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 					$objWriter->endElement();
 
 				$objWriter->endElement();
+			}
 
 			$objWriter->endElement();
 
@@ -1170,7 +1219,7 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 			}
 			else
 			{
-				$objWriter->writeAttribute('count', count( $columnPivotGroups->getKeys() ) + 1 );
+				$objWriter->writeAttribute('count', count( $columnPivotGroups->getKeys() ) + ( $showColGrandTotals ? 1 : 0 ) );
 
 				/**
 				 	The col items element has this kind of structure where each sub element of <i> is a member of respective
@@ -1215,6 +1264,8 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 					$objWriter->endElement();
 				}
 
+				if ( $showColGrandTotals )
+				{
 					$objWriter->startElement('i');
 						$objWriter->writeAttribute('t', 'grand' );
 
@@ -1222,7 +1273,7 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 						$objWriter->endElement();
 
 					$objWriter->endElement();
-
+				}
 			}
 
 			$objWriter->endElement();
@@ -1281,7 +1332,8 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 		// echo $xml;
 		unset( $zip );
 
-		$pivotTable = $this->addPivotTable( "rId$definitionUniqueId", "xl/pivotTables/pivotTable$definitionUniqueId.xml", $xml, $cacheId, "xl/worksheets/sheet" . ( $this->getIndex( $sheet ) + 1 ) . ".xml" );
+		// $pivotTable = $this->addPivotTable( "rId$definitionUniqueId", "xl/pivotTables/pivotTable$definitionUniqueId.xml", $xml, $cacheId, "xl/worksheets/sheet" . ( $this->getIndex( $sheet ) + 1 ) . ".xml" );
+		$pivotTable = $this->addPivotTable( "rId$definitionUniqueId", "xl/pivotTables/pivotTable$definitionUniqueId.xml", $xml, $cacheId, $sheet->getCodeName() );
 
 		$rId = $this->pivotCacheDefinitionCollection->getPivotCacheIndex( $cacheId );
 		$path = $this->pivotCacheDefinitionCollection->getPivotCacheDefinitionPath( $rId );
