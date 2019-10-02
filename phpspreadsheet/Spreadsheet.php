@@ -502,7 +502,7 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 		$definitionUniqueId = uniqid();
 		// $this->definitionId++;
 		// $definitionUniqueId = $this->definitionId;
-		$sharedItems = $this->createCacheDefinition( $sheet, $dataRange, $definitionUniqueId, $date );
+		$sharedItems = $this->createCacheDefinition( $sheet, $dataRange, $definitionUniqueId, $date, $columnGroups, $rowGroups );
 
 		// Create a record set
 		if ( ! $this->createRecordSet( $sheet, $dataRange, $definitionUniqueId, $sharedItems ) ) return false;
@@ -571,9 +571,11 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 	 * @param string $dataRange
 	 * @param string $uniqueId
 	 * @param float $date
+	 * @param Groups $columnGroups
+	 * @param Groups $rowGroups
 	 * @return array Unique values for each column
 	 */
-	private function createCacheDefinition( $sheet, $dataRange, $uniqueId, $date )
+	private function createCacheDefinition( $sheet, $dataRange, $uniqueId, $date, $columnGroups, $rowGroups )
 	{
 		/*
 			For more information about the pivotCacheDefinition element see section 18.10.1.67 of
@@ -627,6 +629,11 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
         // XML header
         $objWriter->startDocument('1.0', 'UTF-8', 'yes');
 
+        $axisHeaders = array_merge(
+			$columnGroups ? $columnGroups->getGroupNames() : array(),
+			$rowGroups ? $rowGroups->getGroupNames() : array()
+		);
+
         // Relationships
 		$objWriter->startElement('pivotCacheDefinition');
 			$objWriter->writeAttribute('xmlns', 'http://schemas.openxmlformats.org/spreadsheetml/2006/main');
@@ -660,51 +667,71 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 						$objWriter->writeAttribute('numFmtId', 0 );
 
 						// Accumulate a list of unique items for this header
-						$type = null;
 						$columnValues = array();
+						$numeric = false;
+						$integer = true;
+						$string = false;
+						$null = false;
 
 						foreach ( $data as $row => $values )
 						{
-							$columnValues[] = $values[ $index ];
-
 							$cellType = $sheet->getCellByColumnAndRow( $leftCol + $index, $topRow + $row + 1 )->getDataType();
-							if ( $type )
+							if ( $cellType == "s" )
 							{
-								if ( $cellType != $type ) $cellType = "s";
+								$string = true;
 							}
-							else $type = $cellType;
+							else if ( $cellType == 'null' )
+							{
+								$null = true;
+							}
+							else
+							{
+								$numeric = true;
+								if ( $integer && is_int( $values[ $index ] ) ) $integer = false;
+							}
+
+							if ( ! isset( $columnValues[ $values[ $index ] ] ) )
+							{
+								$columnValues[ $values[ $index ] ] = $cellType;
+							}
 						}
 
-						$columnValues = array_values( array_unique( $columnValues ) );
+		        		// No need to return the type information
+						$sharedItems[ $header ] = array_keys( $columnValues );
 
+						// These attribute appear to be very exacting settings
 						$objWriter->startElement('sharedItems');
-							if ( $type != "s" )
+						if ( $null )
 							{
-								$nonIntegers = array_filter( $columnValues, function( $value )
+							$objWriter->writeAttribute('containsBlank', "1" );
+						}
+						if ( $numeric )
 								{
-									return intval( $value ) != $value;
-								} );
+							$objWriter->writeAttribute('containsSemiMixedTypes', $string ? "1" : "0" );
 
-								// TODO This needs to be improved.  Hardcoding no mixed types and no always integers and floats is not right.
-								$objWriter->writeAttribute('containsSemiMixedTypes', 0 );
-								$objWriter->writeAttribute('containsString', 0 );
-								$objWriter->writeAttribute('containsNumber', 1);
-								$objWriter->writeAttribute('containsInteger', $nonIntegers ? 0 : 1 ); // Truthy value means 'all numbers are integers'
-								$objWriter->writeAttribute('minValue', min( $columnValues ) );
-								$objWriter->writeAttribute('maxValue', max( $columnValues ) );
+							$objWriter->writeAttribute('containsString', $string ? "1" : "0" );
+							$objWriter->writeAttribute('containsNumber', "1" );
+							$objWriter->writeAttribute('containsInteger', $integer ? "1" : "0" ); // Truthy value means 'all numbers are integers'
+
+							$numerics = array_filter( $sharedItems[ $header ], function( $value ) { return is_numeric( $value ); } );
+
+							$objWriter->writeAttribute('minValue', min( $numerics ) );
+							$objWriter->writeAttribute('maxValue', max( $numerics ) );
 							}
+
+						if ( isset( $axisHeaders[ $header ] ) )
+						{
 							$objWriter->writeAttribute('count', count( $columnValues ) );
 
-							foreach ( $columnValues as $row => $value )
+							foreach ( $columnValues as $value => $type )
 							{
 								$objWriter->startElement( $type );
 									$objWriter->writeAttribute('v', $value );
 		        				$objWriter->endElement();
 							}
+						}
 
 		        		$objWriter->endElement();
-
-						$sharedItems[ $header ] = $columnValues;
 
 	        		$objWriter->endElement();
 				}
