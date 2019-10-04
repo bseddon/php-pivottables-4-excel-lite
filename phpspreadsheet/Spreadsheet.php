@@ -623,7 +623,7 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 		$headers = array_shift( $data );
 		$sharedItems = array();
 
-        // Create XML writer
+		// Create XML writer
         $objWriter = new XMLWriter(XMLWriter::STORAGE_MEMORY);
 
         // XML header
@@ -702,11 +702,11 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 						// These attribute appear to be very exacting settings
 						$objWriter->startElement('sharedItems');
 						if ( $null )
-							{
+						{
 							$objWriter->writeAttribute('containsBlank', "1" );
 						}
 						if ( $numeric )
-								{
+						{
 							$objWriter->writeAttribute('containsSemiMixedTypes', $string ? "1" : "0" );
 
 							$objWriter->writeAttribute('containsString', $string ? "1" : "0" );
@@ -717,7 +717,7 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 
 							$objWriter->writeAttribute('minValue', min( $numerics ) );
 							$objWriter->writeAttribute('maxValue', max( $numerics ) );
-							}
+						}
 
 						if ( isset( $axisHeaders[ $header ] ) )
 						{
@@ -1091,7 +1091,7 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 						$objWriter->writeAttribute('defaultSubtotal', $group->getShowSubtotals() ? "1" : "0" );
 
 						$objWriter->startElement('items');
-							$objWriter->writeAttribute('count', count( $items ) + $group->getShowSubtotals() ? 1 : 0 );
+							$objWriter->writeAttribute('count', count( $items ) + ( $group->getShowSubtotals() ? 1 : 0 ) );
 
 							foreach ( $items as $itemIndex => $item )
 							{
@@ -1342,9 +1342,10 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 			// $objWriter->endElement();
 
 			$objWriter->startElement('pivotTableStyleInfo');
+				$objWriter->writeAttribute('name', "PivotStyleLight2" );
 				$objWriter->writeAttribute('showRowHeaders', "1" );
 				$objWriter->writeAttribute('showColHeaders', "1" );
-				$objWriter->writeAttribute('showRowStripes', "0" );
+				$objWriter->writeAttribute('showRowStripes', "1" );
 				$objWriter->writeAttribute('showColStripes', "0" );
 				$objWriter->writeAttribute('showLastColumn', "1" );
 
