@@ -725,8 +725,11 @@ class Spreadsheet extends \PhpOffice\PhpSpreadsheet\Spreadsheet
 
 							foreach ( $columnValues as $value => $type )
 							{
-								$objWriter->startElement( $type );
+								$objWriter->startElement( $type == 'null' ? 'm' : $type );
+								if ( $type != 'null' )
+								{
 									$objWriter->writeAttribute('v', $value );
+								}
 		        				$objWriter->endElement();
 							}
 						}
