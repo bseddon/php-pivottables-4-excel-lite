@@ -198,7 +198,7 @@ class Xlsx extends \PhpOffice\PhpSpreadsheet\Writer\Xlsx
      *
      * @throws WriterException
      */
-    public function save($pFilename)
+    public function save($pFilename) : void
     {
         if ($this->spreadSheet !== null) {
             // garbage collect
