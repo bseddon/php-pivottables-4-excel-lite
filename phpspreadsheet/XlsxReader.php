@@ -38,6 +38,7 @@ use \XBRL;
 use \lyquidity\xbrl_validate\PhpOffice\PhpSpreadsheet\Xlsx\PivotCacheDefinition;
 use \lyquidity\xbrl_validate\PhpOffice\PhpSpreadsheet\Xlsx\PivotCacheDefinitions;
 use lyquidity\xbrl_validate\PhpOffice\PhpSpreadsheet\Xlsx\PivotCacheRecordsCollection;
+use PhpOffice\PhpSpreadsheet\Style\Supervisor;
 
 require_once __DIR__ . "/Spreadsheet.php";
 
@@ -64,6 +65,56 @@ class Xlsx extends BaseReader
     {
         $this->readFilter = new DefaultReadFilter();
         $this->referenceHelper = ReferenceHelper::getInstance();
+    }
+
+	/**
+	 * Strips out and resolves ./ and ../ parts of the string
+	 * @param string $path
+	 * @return mixed
+	 */
+	public static function normalizePath($path)
+	{
+		// Test this function using these paths
+
+		// $path = '/var/.////./user/./././..//.//../////../././.././test/////';
+		// $path = '/a/b/c/../../../d/e/file.txt'; // should resolve to /d/e/file.txt
+		// $path = '/a/b/c/../../d/e/file.txt'; // which resolves to /a/d/e/file.txt
+		// $path = 'a/b/../c';
+
+		$patterns = array('~/{2,}~', '~/(\./)+~', '~([^/\.]+/(?R)*\.{2,}/)~', '~\.\./~');
+	    $replacements = array('/', '/', '', '');
+	    $prefix = '';
+		if ( strpos( $path, 'http://' ) === 0 )
+		{
+			$prefix = 'http:/';
+			$path = substr( $path, 6 );
+		}
+		if ( strpos( $path, 'https://' ) === 0 )
+		{
+			$prefix = 'https:/';
+			$path = substr( $path, 7 );
+		}
+
+	    return $prefix . preg_replace($patterns, $replacements, $path);
+	}
+
+    /**
+     * Scan theXML for use of <!ENTITY to prevent XXE/XEE attacks.
+     *
+     * @param string $xml
+     *
+     * @throws Exception
+     *
+     * @return string
+     */
+    public function securityScan($xml)
+    {
+    	// return parent::securityScan($xml);
+    	if ( ! $this->securityScanner )
+    	{
+    		$this->securityScanner = \PhpOffice\PhpSpreadsheet\Reader\Security\XmlScanner::getInstance($this);
+    	}
+    	return $this->securityScanner->scan($xml);
     }
 
     /**
@@ -1620,7 +1671,7 @@ class Xlsx extends BaseReader
 									else if ($ele['Type'] == 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/pivotTable')
 									{
 		                            	// For now just reserve this Xml
-		                            	$path = XBRL::normalizePath( dirname("$dir/$fileWorksheet") . "/{$ele['Target']}");
+		                            	$path = self::normalizePath( dirname("$dir/$fileWorksheet") . "/{$ele['Target']}");
 
 		                            	$xml = $this->securityScan($this->getFromZipArchive($zip, $path ) );
 		                            	$pivotTableXml = simplexml_load_string( $xml );
@@ -1643,7 +1694,7 @@ class Xlsx extends BaseReader
 
 		                                foreach ( $relsPivotCache->Relationship as $elementName => $relationship )
 		                                {
-		                                	$normalizedPath = XBRL::normalizePath( dirname( $path ) . '/' . $relationship['Target'] );
+		                                	$normalizedPath = self::normalizePath( dirname( $path ) . '/' . $relationship['Target'] );
 			                            	$xml = $this->securityScan( $this->getFromZipArchive($zip, $normalizedPath ) );
 			                            	$records = $excel->addPivotCacheRecords( (string)$relationship['Id'], $normalizedPath, $xml, $path );
 		                                }
